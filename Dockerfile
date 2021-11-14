@@ -6,7 +6,11 @@ COPY requirements.txt ./requirements.txt
 
 COPY data data
 
-RUN pip install -r requirements.txt
+COPY app.py .
+
+RUN pip install --upgrade pip
+
+RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8501
 

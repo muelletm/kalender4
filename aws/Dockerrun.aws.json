@@ -1,0 +1,7 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Logging": "/tmp/kalender4",
+  "Image": {
+  	"Update": "false"
+  }
+}
