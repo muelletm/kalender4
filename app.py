@@ -40,7 +40,7 @@ _lang_dict = {
         "ca": "Cal esperar un dia abans d'obrir aquesta porta.",
         "de": "Du musst noch einen Tag warten, bevor du diese Tür öffnen kannst.",
         "es": "Debes esperar un día antes de abrir esta puerta.",
-    }
+    },
 }
 
 
@@ -62,19 +62,34 @@ def get_drawings_of_day(day: int) -> List[str]:
     return [str(f) for f in files]
 
 
+def get_audios_of_day(day: int) -> List[str]:
+    files = Path("data", "audio").glob(f"audio_{day:02}*ogg")
+    return [str(f) for f in files]
+
+
 def main():
 
-    st.set_page_config(initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="Kalender4", page_icon="🎄", initial_sidebar_state="expanded"
+    )
 
     query_params = st.experimental_get_query_params()
 
-    lang = st.sidebar.selectbox("", sorted(_lang_to_code.keys()))
-    lang_code = _lang_to_code[lang]
+    if "lang" in query_params:
+        lang_code = query_params["lang"][0]
+    else:
+        lang = st.sidebar.selectbox("", sorted(_lang_to_code.keys()))
+        lang_code = _lang_to_code[lang]
 
     def tr(x: str) -> str:
         return _lang_dict[x][lang_code]
 
-    passwd = st.sidebar.text_input(tr("password"), type="password")
+    st.markdown("# 🎄 Kalender 4")
+
+    if "passwd" in query_params:
+        passwd = query_params["passwd"][0]
+    else:
+        passwd = st.sidebar.text_input(tr("password"), type="password")
     if not passwd:
         st.write(tr("enter password"))
         return
@@ -93,15 +108,24 @@ def main():
         if delta.total_seconds() > 0:
             days_to_wait = delta.days
             if days_to_wait == 1:
-                st.write(tr("you need to wait 1 day").replace("#", str(days_to_wait)))
+                st.write(
+                    tr("you need to wait 1 day").replace("#", str(days_to_wait))
+                )
             else:
-                st.write(tr("you need to wait # days").replace("#", str(days_to_wait)))
+                st.write(
+                    tr("you need to wait # days").replace(
+                        "#", str(days_to_wait)
+                    )
+                )
         else:
+            for audio in get_audios_of_day(day):
+                st.audio(audio)
             for drawing in get_drawings_of_day(day):
                 st.image(drawing, use_column_width=True)
-            # st.audio("data/audio/burrito_sabanero.ogg")
+
     else:
 
         st.image(f"data/doors/door_{day:02}.jpg", use_column_width=True)
+
 
 main()
