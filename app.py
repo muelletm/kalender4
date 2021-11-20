@@ -58,13 +58,32 @@ def day_date(day: int):
 
 
 def get_drawings_of_day(day: int) -> List[str]:
-    files = Path("data", "drawings").glob(f"image_{day:02}*jpg")
+    files = Path("data", "drawings").glob(f"image_{day:02}*.jpg")
     return [str(f) for f in files]
 
 
 def get_audios_of_day(day: int) -> List[str]:
-    files = Path("data", "audio").glob(f"audio_{day:02}*ogg")
+    files = Path("data", "audio").glob(f"audio_{day:02}*.ogg")
     return [str(f) for f in files]
+
+
+def get_photos_of_day(day: int) -> List[str]:
+    files = Path("data", "photos", "small").glob(f"{day:02}_*.jpg")
+    return [str(f) for f in files]
+
+
+def get_videos_of_day(day: int) -> List[str]:
+    files = Path("data", "videos").glob(f"{day:02}_*.mp4")
+    return [str(f) for f in files]
+
+
+def get_current_day() -> int:
+    now = datetime.utcnow()
+    # if now.month != 12:
+    #     return 0
+    if now.day > 24:
+        return 0
+    return now.day
 
 
 def main():
@@ -84,8 +103,6 @@ def main():
     def tr(x: str) -> str:
         return _lang_dict[x][lang_code]
 
-    st.markdown("# 🎄 Kalender 4")
-
     if "passwd" in query_params:
         passwd = query_params["passwd"][0]
     else:
@@ -97,35 +114,47 @@ def main():
         st.write(tr("password incorrect"))
         return
 
-    day = st.slider(tr("day"), min_value=1, max_value=24)
+    _, c, _ = st.columns([1, 6, 1])
 
-    button_col, door_col = st.columns(2)
-    with button_col:
+    with c:
+        st.markdown("# 🎄 Kalender 4")
+
+        day = st.slider(
+            tr("day"), value=get_current_day(), min_value=1, max_value=24
+        )
+
         open = st.button(tr("open"))
 
-    if open:
-        delta = day_date(day) - today(query_params)
-        if delta.total_seconds() > 0:
-            days_to_wait = delta.days
-            if days_to_wait == 1:
-                st.write(
-                    tr("you need to wait 1 day").replace("#", str(days_to_wait))
-                )
-            else:
-                st.write(
-                    tr("you need to wait # days").replace(
-                        "#", str(days_to_wait)
+        if open:
+
+            delta = day_date(day) - today(query_params)
+            if delta.total_seconds() > 0:
+                days_to_wait = delta.days
+                if days_to_wait == 1:
+                    st.write(
+                        tr("you need to wait 1 day").replace(
+                            "#", str(days_to_wait)
+                        )
                     )
-                )
+                else:
+                    st.write(
+                        tr("you need to wait # days").replace(
+                            "#", str(days_to_wait)
+                        )
+                    )
+            else:
+                for video in get_videos_of_day(day):
+                    st.video(video)
+                for audio in get_audios_of_day(day):
+                    st.audio(audio)
+                for drawing in get_drawings_of_day(day):
+                    st.image(drawing)
+                for image in get_photos_of_day(day):
+                    st.image(image)
+
         else:
-            for audio in get_audios_of_day(day):
-                st.audio(audio)
-            for drawing in get_drawings_of_day(day):
-                st.image(drawing, use_column_width=True)
 
-    else:
-
-        st.image(f"data/doors/door_{day:02}.jpg", use_column_width=True)
+            st.image(f"data/doors/door_{day:02}.jpg")
 
 
 main()
