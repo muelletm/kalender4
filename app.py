@@ -79,8 +79,8 @@ def get_videos_of_day(day: int) -> List[str]:
 
 def get_current_day() -> int:
     now = datetime.utcnow()
-    # if now.month != 12:
-    #     return 0
+    if now.month != 12:
+        return 0
     if now.day > 24:
         return 0
     return now.day
