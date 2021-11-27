@@ -6,10 +6,6 @@ temp_dir=$(mktemp -d)
 
 cp -r data $temp_dir
 
-rm -r $temp_dir/data/photos/sorted
-
-rm -r $temp_dir/data/photos/original
-
 cp aws/cron.yaml $temp_dir
 
 cp aws/Dockerrun.aws.json $temp_dir
