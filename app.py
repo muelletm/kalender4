@@ -178,7 +178,13 @@ def main():
             "<h1 style='text-align: center'>🎄 Kalender 4</h1>",
             unsafe_allow_html=True,
         )
-        day = st.slider(
+
+        if "slider-input" in query_params and query_params.get("slider-input")[0]:
+            day_widget = st.slider
+        else:
+            day_widget = st.number_input
+
+        day = day_widget(
             tr("day"), value=get_current_day(), min_value=1, max_value=24
         )
 
