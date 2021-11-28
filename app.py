@@ -33,12 +33,12 @@ _lang_dict = {
     },
     "you need to wait # days": {
         "ca": "Cal esperar # dies abans d'obrir aquesta porta.",
-        "de": "Du musst noch # Tage warten, bevor du diese Tür öffnen kannst.",
+        "de": "Du musst noch # Tage warten bevor du diese Tür öffnen kannst.",
         "es": "Debes esperar # días antes de abrir esta puerta.",
     },
     "you need to wait 1 day": {
         "ca": "Cal esperar un dia abans d'obrir aquesta porta.",
-        "de": "Du musst noch einen Tag warten, bevor du diese Tür öffnen kannst.",
+        "de": "Du musst noch einen Tag warten bevor du diese Tür öffnen kannst.",
         "es": "Debes esperar un día antes de abrir esta puerta.",
     },
 }
@@ -83,8 +83,8 @@ def get_current_day() -> int:
 
 def enable_google_analytics():
     """
-        Hack where we overwrite the static index.html of streamlit.
-        https://discuss.streamlit.io/t/how-to-add-google-analytics-or-js-code-in-a-streamlit-app/1610/30
+    Hack where we overwrite the static index.html of streamlit.
+    https://discuss.streamlit.io/t/how-to-add-google-analytics-or-js-code-in-a-streamlit-app/1610/30
     """
     account_id = os.getenv("GOOGLE_ANALYTICS_ACCOUNT_ID")
     if account_id is None:
@@ -118,7 +118,8 @@ def main():
 
     enable_google_analytics()
 
-    st.markdown("""<style>
+    st.markdown(
+        """<style>
         .row-widget {
             display: flex;
             justify-content: center;
@@ -127,19 +128,15 @@ def main():
         .stButton {
             display: flex;
             justify-content: center;
-
         }
 
         .css-ns78wr {
             padding: 16px 16px;
             margin: 4px 4px;
         }
-       
-
-    </style>""", unsafe_allow_html=True)
-        
-
-
+    </style>""",
+        unsafe_allow_html=True,
+    )
 
     query_params = st.experimental_get_query_params()
 
@@ -166,7 +163,10 @@ def main():
     _, c, _ = st.columns([1, 6, 1])
 
     with c:
-        st.markdown("<h1 style='text-align: center'>🎄 Kalender 4</h1>", unsafe_allow_html=True)
+        st.markdown(
+            "<h1 style='text-align: center'>🎄 Kalender 4</h1>",
+            unsafe_allow_html=True,
+        )
         day = st.slider(
             tr("day"), value=get_current_day(), min_value=1, max_value=24
         )
@@ -177,9 +177,7 @@ def main():
             days_to_wait = delta.days
             if days_to_wait == 1:
                 st.write(
-                    tr("you need to wait 1 day").replace(
-                        "#", str(days_to_wait)
-                    )
+                    tr("you need to wait 1 day").replace("#", str(days_to_wait))
                 )
             else:
                 st.write(
@@ -187,7 +185,7 @@ def main():
                         "#", str(days_to_wait)
                     )
                 )
-            st.image(f"data/doors/closed.jpg")
+            st.image("data/doors/closed.jpg")
         else:
 
             open = st.button(tr("open"))
@@ -202,8 +200,7 @@ def main():
 
             else:
 
-                st.image(f"data/doors/open.jpg")
-
+                st.image("data/doors/open.jpg")
 
 
 main()
