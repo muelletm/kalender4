@@ -81,11 +81,42 @@ def get_current_day() -> int:
     return now.day
 
 
+def enable_google_analytics():
+    """
+        Hack where we overwrite the static index.html of streamlit.
+        https://discuss.streamlit.io/t/how-to-add-google-analytics-or-js-code-in-a-streamlit-app/1610/30
+    """
+    account_id = os.getenv("GOOGLE_ANALYTICS_ACCOUNT_ID")
+    if account_id is None:
+        return
+    tracking_code = f"""
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={account_id}">
+        </script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){{dataLayer.push(arguments);}}
+            gtag('js', new Date());
+            gtag('config', '{account_id}');
+        </script>
+    """
+    index_path = Path(st.__file__).parent.joinpath("static", "index.html")
+    if not index_path.exists():
+        raise ValueError("Cannot find index.")
+    index_html = index_path.read_text()
+    if account_id in index_html:
+        return
+    index_html = index_html.replace("<head>", "<head>" + tracking_code)
+    index_path.write_text(index_html)
+
+
 def main():
 
     st.set_page_config(
         page_title="Kalender4", page_icon="🎄", initial_sidebar_state="expanded"
     )
+
+    enable_google_analytics()
 
     st.markdown("""<style>
         .row-widget {
