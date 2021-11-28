@@ -110,12 +110,23 @@ def enable_google_analytics():
     index_path.write_text(index_html)
 
 
+def hide_menu():
+    hide_streamlit_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
+
 def main():
 
     st.set_page_config(
         page_title="Kalender4", page_icon="🎄", initial_sidebar_state="expanded"
     )
 
+    hide_menu()
     enable_google_analytics()
 
     st.markdown(
