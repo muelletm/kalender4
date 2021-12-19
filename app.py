@@ -1,9 +1,17 @@
+import enum
+import json
 import os
 from datetime import date, datetime
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import streamlit as st
+
+
+class Mode(enum.Enum):
+    CALENDAR = "calendar"
+    CONCERT = "concert"
+
 
 _lang_dict = {
     "day": {
@@ -40,6 +48,41 @@ _lang_dict = {
         "ca": "Cal esperar un dia abans d'obrir aquesta porta.",
         "de": "Du musst noch einen Tag warten bevor du diese Tür öffnen kannst.",
         "es": "Debes esperar un día antes de abrir esta puerta.",
+    },
+    "title": {
+        "ca": "Obra",
+        "de": "Stück",
+        "es": "Obra",
+    },
+    "guitar": {
+        "ca": "Guitarra",
+        "de": "Gitarre",
+        "es": "Guitarra",
+    },
+    "violin": {
+        "ca": "Violí",
+        "de": "Geige",
+        "es": "Violín",
+    },
+    "vocals": {
+        "ca": "Veu",
+        "de": "Gesang",
+        "es": "Voz",
+    },
+    "piano": {
+        "ca": "Piano",
+        "de": "Klavier",
+        "es": "Piano",
+    },
+    "year": {
+        "ca": "Any",
+        "de": "Jahr",
+        "es": "Año",
+    },
+    "bonus": {
+        "ca": "Bonus",
+        "de": "Bonus",
+        "es": "Bonus",
     },
 }
 
@@ -120,6 +163,130 @@ def hide_menu():
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 
+def get_mode(query_params) -> Optional[Mode]:
+    mode = query_params.get("mode", None)
+    if mode is None:
+        return Mode.CALENDAR
+    try:
+        return Mode(mode[0].lower())
+    except KeyError as error:
+        st.error(f"Invalid mode: {mode} ({error})")
+        return None
+
+
+def run_calendar(query_params, tr):
+    _, c, _ = st.columns([1, 6, 1])
+
+    with c:
+        st.markdown(
+            "<h1 style='text-align: center'>🎄 Kalender 4</h1>",
+            unsafe_allow_html=True,
+        )
+
+        # fmt: off
+        if (
+            "slider-input" in query_params and query_params.get("slider-input")[0]
+        ):
+            day_widget = st.slider
+        else:
+            day_widget = st.number_input
+        # fmt: on
+
+        day = day_widget(
+            tr("day"), value=get_current_day(), min_value=1, max_value=24
+        )
+
+        delta = day_date(day) - today(query_params)
+
+        if delta.total_seconds() > 0:
+            days_to_wait = delta.days
+            if days_to_wait == 1:
+                st.write(
+                    tr("you need to wait 1 day").replace("#", str(days_to_wait))
+                )
+            else:
+                st.write(
+                    tr("you need to wait # days").replace(
+                        "#", str(days_to_wait)
+                    )
+                )
+            st.image("data/doors/closed.jpg")
+        else:
+
+            open = st.button(tr("open"))
+
+            if open or query_params.get("open", False):
+                for video in get_videos_of_day(day):
+                    st.video(video)
+                for audio in get_audios_of_day(day):
+                    st.audio(audio)
+                for drawing in get_images_of_day(day):
+                    st.image(drawing)
+
+            else:
+
+                st.image("data/doors/open.jpg")
+
+
+def _break():
+    st.markdown(
+        "<br />",
+        unsafe_allow_html=True,
+    )
+
+
+def run_concert(query_params, tr):
+
+    st.markdown(
+        "<h1 style='text-align: center'>🎄 Weihnachtskonzert 2021</h1>",
+        unsafe_allow_html=True,
+    )
+
+    _break()
+    _break()
+
+    data_path = Path(".", "data", "concert")
+
+    songs = {}
+    for song_data_path in data_path.glob("**/metadata.json"):
+        song_data = json.loads(song_data_path.read_text())
+        song_data["filepath"] = song_data_path.parent.joinpath(
+            song_data["filename"]
+        )
+        year = song_data["meta"]["year"]
+        key = song_data["title"]
+        if year != "2021":
+            key = tr("bonus") + ": " + key
+        if key in songs:
+            raise ValueError(key)
+        songs[key] = song_data
+
+    song_names = sorted(
+        songs.keys(),
+        key=lambda x: (1, x) if x.startswith(tr("bonus")) else (0, x),
+    )
+
+    song_name = st.selectbox("", song_names)
+
+    song_data = songs[song_name]
+
+    _break()
+    _break()
+
+    filepath = song_data["filepath"]
+    st.audio(str(filepath))
+
+    st.markdown(
+        "<br />".join(
+            [
+                f"**{tr(key)}**: {value}"
+                for key, value in song_data["meta"].items()
+            ]
+        ),
+        unsafe_allow_html=True,
+    )
+
+
 def main():
 
     st.set_page_config(
@@ -171,53 +338,16 @@ def main():
         st.write(tr("password incorrect"))
         return
 
-    _, c, _ = st.columns([1, 6, 1])
+    mode = get_mode(query_params)
 
-    with c:
-        st.markdown(
-            "<h1 style='text-align: center'>🎄 Kalender 4</h1>",
-            unsafe_allow_html=True,
-        )
-
-        if "slider-input" in query_params and query_params.get("slider-input")[0]:
-            day_widget = st.slider
-        else:
-            day_widget = st.number_input
-
-        day = day_widget(
-            tr("day"), value=get_current_day(), min_value=1, max_value=24
-        )
-
-        delta = day_date(day) - today(query_params)
-
-        if delta.total_seconds() > 0:
-            days_to_wait = delta.days
-            if days_to_wait == 1:
-                st.write(
-                    tr("you need to wait 1 day").replace("#", str(days_to_wait))
-                )
-            else:
-                st.write(
-                    tr("you need to wait # days").replace(
-                        "#", str(days_to_wait)
-                    )
-                )
-            st.image("data/doors/closed.jpg")
-        else:
-
-            open = st.button(tr("open"))
-
-            if open or query_params.get("open", False):
-                for video in get_videos_of_day(day):
-                    st.video(video)
-                for audio in get_audios_of_day(day):
-                    st.audio(audio)
-                for drawing in get_images_of_day(day):
-                    st.image(drawing)
-
-            else:
-
-                st.image("data/doors/open.jpg")
+    if mode is None:
+        return
+    elif mode == Mode.CALENDAR:
+        run_calendar(query_params, tr)
+    elif mode == Mode.CONCERT:
+        run_concert(query_params, tr)
+    else:
+        raise NotImplementedError(mode)
 
 
 main()
